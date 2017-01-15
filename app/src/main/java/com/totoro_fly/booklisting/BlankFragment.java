@@ -7,35 +7,29 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
-
-import java.util.ArrayList;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link BookListingFragment.OnFragmentInteractionListener} interface
+ * {@link BlankFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link BookListingFragment#newInstance} factory method to
+ * Use the {@link BlankFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class BookListingFragment extends Fragment {
-    private static final String TAG = BookListingFragment.class.getSimpleName();
-    private String bookListURL = "https://www.googleapis.com/books/v1/volumes?q=placeholder&country=us";
-
+public class BlankFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String title = "";
+    private String mParam1;
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
 
-    public BookListingFragment() {
+    public BlankFragment() {
         // Required empty public constructor
     }
 
@@ -45,11 +39,11 @@ public class BookListingFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment BookListingFragment.
+     * @return A new instance of fragment BlankFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static BookListingFragment newInstance(String param1, String param2) {
-        BookListingFragment fragment = new BookListingFragment();
+    public static BlankFragment newInstance(String param1, String param2) {
+        BlankFragment fragment = new BlankFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -61,26 +55,16 @@ public class BookListingFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            title = getArguments().getString(ARG_PARAM1);
+            mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-        bookListURL = bookListURL.replace("placeholder", title);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_listing, container, false);
-        ArrayList<Book> bookList = new ArrayList<Book>();
-        Book textBook = new Book(bookListURL, "2", "3", "4");
-//        bookList.add(textBook);
-        BookAdapter bookAdapter = new BookAdapter(getContext(), bookList);
-//        ArrayList<Book> arrayList = urlutlis.createBookArrayList();
-//        ArrayList<Book> arrayList = new URLUtils().createBookArrayList(bookListURL);
-//        BookAdapter bookAdapter = new BookAdapter(getContext(), arrayList);
-        listView.setAdapter(bookAdapter);
         // Inflate the layout for this fragment
-        return listView;
+        return inflater.inflate(R.layout.fragment_blank, container, false);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -105,7 +89,6 @@ public class BookListingFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
-
     }
 
     /**

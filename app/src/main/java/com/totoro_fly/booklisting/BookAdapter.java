@@ -29,12 +29,13 @@ public class BookAdapter extends ArrayAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View itemView = convertView;
-        ViewHolder viewHolder = new ViewHolder();
+        ViewHolder viewHolder;
         if (itemView == null) {
             itemView = LayoutInflater.from(getContext()).inflate(R.layout.list_item, parent, false);
+            viewHolder = new ViewHolder();
             viewHolder.mName = (TextView) itemView.findViewById(R.id.name_textview);
-            viewHolder.mAuthor = (TextView) itemView.findViewById(R.id.name_textview);
-            viewHolder.mPrice = (TextView) itemView.findViewById(R.id.name_textview);
+            viewHolder.mAuthor = (TextView) itemView.findViewById(R.id.author_textview);
+            viewHolder.mPrice = (TextView) itemView.findViewById(R.id.price_textview);
             itemView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) itemView.getTag();
