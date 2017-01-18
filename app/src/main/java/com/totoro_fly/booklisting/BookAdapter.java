@@ -1,14 +1,18 @@
 package com.totoro_fly.booklisting;
 
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Created by totoro-fly on 2017/1/14.
@@ -22,12 +26,6 @@ public class BookAdapter extends BaseAdapter {
         mContext = context;
         mArrayList = arrayList;
     }
-
-//    public void refresh(ArrayList<Book> arrayList) {
-//        mArrayList = arrayList;
-//        notifyDataSetChanged();
-//    }
-
 
     @Override
     public int getCount() {
@@ -49,6 +47,8 @@ public class BookAdapter extends BaseAdapter {
         private TextView mAuthor;
         private TextView mPrice;
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @NonNull
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -67,7 +67,11 @@ public class BookAdapter extends BaseAdapter {
         Book book = (Book) getItem(position);
         viewHolder.mName.setText(book.getmName());
         viewHolder.mAuthor.setText(book.getmAuthor());
-        viewHolder.mPrice.setText(book.getmPrice());
+        String amount = book.getmPrice();
+        if (amount.equals("无"))
+            viewHolder.mPrice.setText(amount);
+        else
+            viewHolder.mPrice.setText(NumberFormat.getCurrencyInstance(Locale.US).format(Double.parseDouble(amount)));
         return itemView;
     }
 }

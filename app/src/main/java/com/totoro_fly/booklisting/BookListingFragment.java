@@ -1,44 +1,40 @@
 package com.totoro_fly.booklisting;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
+
+import butterknife.ButterKnife;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link BookListingFragment.OnFragmentInteractionListener} interface
+ * {@link OnFragmentInteractionListener} interface
  * to handle interaction events.
  * Use the {@link BookListingFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
 public class BookListingFragment extends Fragment {
     private static final String TAG = BookListingFragment.class.getSimpleName();
-    private ArrayList<Book> mBookArrayList;
     //    private String bookListURL = "https://www.googleapis.com/books/v1/volumes?q=placeholder&country=us";
     private String bookListURL = "https://www.googleapis.com/books/v1/volumes?q=android&country=us";
+    private ListView mListview;
+    private ProgressDialog progressDialog;
+    private SwipeRefreshLayout swipe;
+
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -80,24 +76,30 @@ public class BookListingFragment extends Fragment {
             title = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        progressDialog = new ProgressDialog(getContext());
         BookAsyncTask bookAsyncTask = new BookAsyncTask();
         bookAsyncTask.execute();
-
     }
 
-    private class BookAsyncTask extends AsyncTask<URL, Integer, ArrayList<Book>> {
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
+    }
+
+    private class BookAsyncTask extends AsyncTask<String, Integer, ArrayList<Book>> implements SwipeRefreshLayout.OnRefreshListener {
         @Override
         protected void onPreExecute() {
-//            progressDialog.show();
-//            progressDialog.setMessage("刷新...");
+            progressDialog.show();
+            progressDialog.setMessage("刷新...");
         }
 
         @Override
-        protected ArrayList doInBackground(URL... urls) {
-            URL url = createUrl(bookListURL);
+        protected ArrayList doInBackground(String... urls) {
+            URL url = UrlUtils.createUrl(bookListURL);
             String stringJson = "";
-            stringJson = makeHTTPRequest(url);
-            ArrayList bookList = extractFromJson(stringJson);
+            stringJson = UrlUtils.makeHTTPRequest(url, getContext());
+            ArrayList bookList = UrlUtils.extractFromJson(stringJson);
             return bookList;
         }
 
@@ -106,121 +108,30 @@ public class BookListingFragment extends Fragment {
             if (bookList == null) {
                 return;
             }
-            mBookArrayList = bookList;
-//            progressDialog.dismiss();
-        }
-    }
+            BookAdapter bookAdapter = new BookAdapter(getContext(), bookList);
+            mListview.setAdapter(bookAdapter);
+            swipe.setOnRefreshListener(this);
+            progressDialog.dismiss();
 
-    private URL createUrl(String stringUrl) {
-        URL url = null;
-        try {
-            url = new URL(stringUrl);
-        } catch (MalformedURLException e) {
-            Log.e(TAG, "createUrl ", e);
-            e.printStackTrace();
         }
-        return url;
-    }
 
-    private String makeHTTPRequest(URL url) {
-        HttpURLConnection httpURLConnection = null;
-        InputStream inputStream = null;
-        String jsonResponse = "";
-        try {
-            httpURLConnection = (HttpURLConnection) url.openConnection();
-            httpURLConnection.setRequestMethod("GET");
-            httpURLConnection.setReadTimeout(1000);
-            httpURLConnection.setConnectTimeout(1500);
-            httpURLConnection.connect();
-            inputStream = httpURLConnection.getInputStream();
-            jsonResponse = readFromStream(inputStream);
-        } catch (IOException e) {
-            Log.e(TAG, "makeHTTPUrl ", e);
-            e.printStackTrace();
-        } finally {
-            if (httpURLConnection != null) {
-                httpURLConnection.disconnect();
-            }
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    Log.e(TAG, "makeHTTPUrl closeInputStream", e);
-                    e.printStackTrace();
+        @Override
+        public void onRefresh() {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    swipe.setRefreshing(false);
                 }
-            }
+            }, 1000);
         }
-        return jsonResponse;
     }
-
-    private String readFromStream(InputStream inputStream) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String line = "";
-        if (inputStream != null) {
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            try {
-                line = bufferedReader.readLine();
-                while (line != null) {
-                    stringBuilder.append(line);
-                    line = bufferedReader.readLine();
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "readFromStream", e);
-                e.printStackTrace();
-            }
-        }
-        return stringBuilder.toString();
-    }
-
-    private ArrayList extractFromJson(String jsonResponse) {
-        ArrayList<Book> bookList = new ArrayList<Book>();
-        try {
-            JSONObject baseJsonResponse = new JSONObject(jsonResponse);
-            JSONArray items = baseJsonResponse.getJSONArray("items");
-            if (items.length() > 0) {
-                for (int i = 0; i < items.length(); i++) {
-                    JSONObject item = items.getJSONObject(i);
-                    JSONObject volumeInfo = item.getJSONObject("volumeInfo");
-                    String title = volumeInfo.getString("title");
-                    JSONArray authors = volumeInfo.getJSONArray("authors");
-                    String author = " ";
-                    for (int j = 0; j < authors.length(); j++) {
-                        author = author + authors.getString(j);
-                    }
-                    String infoLink = volumeInfo.getString("infoLink");
-                    JSONObject saleInfo = item.getJSONObject("saleInfo");
-                    String amount = "";
-                    if (saleInfo.has("listPrice")) {
-                        JSONObject listPrice = saleInfo.getJSONObject("listPrice");
-                        amount = listPrice.getString("amount");
-                    } else {
-                        amount = "无";
-                    }
-                    bookList.add(new Book(title, author, amount, infoLink));
-                }
-            }
-        } catch (JSONException e) {
-            Log.e(TAG, "extractFromJsonn ", e);
-            e.printStackTrace();
-        }
-        return bookList;
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-//        bookListURL = bookListURL.replace("placeholder", title);
         ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_listing, container, false);
-//        ArrayList<Book> bookList = new ArrayList<Book>();
-//        Book textBook = new Book(bookListURL, "2", "3", "4");
-//        bookList.add(textBook);
-//        BookAdapter bookAdapter = new BookAdapter(getContext(), bookList);
-//        ArrayList<Book> arrayList = urlutlis.createBookArrayList();
-        BookAdapter bookAdapter = new BookAdapter(getContext(), mBookArrayList);
-        listView.setAdapter(bookAdapter);
-        // Inflate the layout for this fragment
+        mListview = (ListView) listView.findViewById(R.id.booklisting_listview);
+        swipe = (SwipeRefreshLayout) listView.findViewById(R.id.swipe_refresh);
         return listView;
     }
 
