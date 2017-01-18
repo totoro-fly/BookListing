@@ -34,6 +34,7 @@ public class BookListingFragment extends Fragment {
     private ListView mListview;
     private ProgressDialog progressDialog;
     private SwipeRefreshLayout swipe;
+    
 
     
 
