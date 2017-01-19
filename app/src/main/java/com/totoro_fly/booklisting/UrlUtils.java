@@ -1,6 +1,5 @@
 package com.totoro_fly.booklisting;
 
-import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -36,23 +35,21 @@ public class UrlUtils {
         return url;
     }
 
-    public static String makeHTTPRequest(URL url, Context mcontext) {
+    public static String makeHTTPRequest(URL url) {
         HttpURLConnection httpURLConnection = null;
         InputStream inputStream = null;
         String jsonResponse = "";
         try {
             httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setRequestMethod("GET");
-            httpURLConnection.setReadTimeout(4 * 1000);
-            httpURLConnection.setConnectTimeout(6 * 1000);
+            httpURLConnection.setReadTimeout(8 * 1000);
+            httpURLConnection.setConnectTimeout(10 * 1000);
             httpURLConnection.connect();
-            if (httpURLConnection.getResponseCode() != 200)
-                Toast.makeText(mcontext, "链接失败", Toast.LENGTH_SHORT).show();
             inputStream = httpURLConnection.getInputStream();
             jsonResponse = readFromStream(inputStream);
         } catch (IOException e) {
             Log.e(TAG, "makeHTTPUrl ", e);
-//            Toast.makeText(mcontext,"刷新失败",Toast.LENGTH_SHORT).show();
+            Toast.makeText(MyApplication.getContext(), "获取失败", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         } finally {
             if (httpURLConnection != null) {
@@ -100,10 +97,14 @@ public class UrlUtils {
                     JSONObject item = items.getJSONObject(i);
                     JSONObject volumeInfo = item.getJSONObject("volumeInfo");
                     String title = volumeInfo.getString("title");
-                    JSONArray authors = volumeInfo.getJSONArray("authors");
                     String author = " ";
-                    for (int j = 0; j < authors.length(); j++) {
-                        author = author + authors.getString(j);
+                    if (volumeInfo.has("authors")) {
+                        JSONArray authors = volumeInfo.getJSONArray("authors");
+                        for (int j = 0; j < authors.length(); j++) {
+                            author = author + authors.getString(j);
+                        }
+                    } else {
+                        author = "无";
                     }
                     String infoLink = volumeInfo.getString("infoLink");
                     JSONObject saleInfo = item.getJSONObject("saleInfo");
@@ -119,6 +120,7 @@ public class UrlUtils {
             }
         } catch (JSONException e) {
             Log.e(TAG, "extractFromJsonn ", e);
+            Toast.makeText(MyApplication.getContext(),"无相关信息",Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
         return bookList;
