@@ -4,13 +4,11 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -43,11 +41,11 @@ public class MainActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
     }
 
-    private void changeFocus() {
+    private void changeFocusHideKeyboard() {
         titleEdittext.clearFocus();
         enterButton.setFocusable(true);
         InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        inputMethodManager.hideSoftInputFromWindow(enterButton.getWindowToken(), 0);
+        inputMethodManager.hideSoftInputFromWindow(titleEdittext.getWindowToken(), 0);
     }
 
     @Override
@@ -69,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
             URL url = UrlUtils.createUrl(bookListURL);
             String stringJson = "";
             stringJson = UrlUtils.makeHTTPRequest(url);
-            Log.e(TAG, stringJson);
             ArrayList bookList = UrlUtils.extractFromJson(stringJson);
             return bookList;
         }
@@ -81,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
             }
             updateUI(bookList);
             progressDialog.dismiss();
-
         }
 
     }
@@ -96,12 +92,10 @@ public class MainActivity extends AppCompatActivity {
     public void onClick() {
         String title = String.valueOf(titleEdittext.getText());
         if (title.isEmpty()) {
-            Toast.makeText(MyApplication.getContext(), "请输入书籍相关信息", Toast.LENGTH_SHORT).show();
             return;
         }
-        changeFocus();
+        changeFocusHideKeyboard();
         bookListURL = bookListURL1 + title + bookListURL2;
-        Log.e(TAG, bookListURL);
         BookAsyncTask bookAsyncTask = new BookAsyncTask();
         bookAsyncTask.execute();
     }
