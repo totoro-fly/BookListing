@@ -1,6 +1,8 @@
 package com.totoro_fly.booklisting;
 
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 
 public class UrlUtils {
     private static final String TAG = "UriUtils";
+    public static Handler mHandler;
 
     public static URL createUrl(String stringUrl) {
         URL url = null;
@@ -50,7 +53,7 @@ public class UrlUtils {
             jsonResponse = readFromStream(inputStream);
         } catch (IOException e) {
             Log.e(TAG, "makeHTTPUrl ", e);
-            toast("连接超时");
+            toastAndSendOverMessage("连接超时");
             e.printStackTrace();
         } finally {
             if (httpURLConnection != null) {
@@ -121,16 +124,18 @@ public class UrlUtils {
             }
         } catch (JSONException e) {
             Log.e(TAG, "extractFromJsonn ", e);
-            toast("请重新输入，无相关信息。");
             e.printStackTrace();
+            toastAndSendOverMessage("请重新输入，无相关信息");
         }
         return bookList;
     }
 
-    private static void toast(String str) {
+    private static void toastAndSendOverMessage(String str) {
         Looper.prepare();
         Toast.makeText(MyApplication.getContext(), str, Toast.LENGTH_SHORT).show();
+        Message message = new Message();
+        message.what = 0;
+        mHandler.sendMessage(message);
         Looper.loop();
     }
-
 }

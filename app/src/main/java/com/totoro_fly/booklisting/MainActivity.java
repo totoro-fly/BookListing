@@ -3,6 +3,8 @@ package com.totoro_fly.booklisting;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private String bookListURL2 = "&country=us";
     private String bookListURL = "";
     private ProgressDialog progressDialog;
+    BookAsyncTask bookAsyncTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,23 +54,28 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        //旋转屏幕时点击按钮
+        //旋转屏幕点击按钮,刷新数据。
         enterButton.performClick();
     }
 
     private class BookAsyncTask extends AsyncTask<String, Integer, ArrayList<Book>> {
         @Override
         protected void onPreExecute() {
-            progressDialog.show();
+            progressDialog.setCancelable(false);
             progressDialog.setMessage("刷新...");
+            progressDialog.show();
         }
 
         @Override
         protected ArrayList doInBackground(String... urls) {
+            //传递Handler对象，试子线程使用sendmessage
+            UrlUtils.mHandler = mHandler;
             URL url = UrlUtils.createUrl(bookListURL);
             String stringJson = "";
             stringJson = UrlUtils.makeHTTPRequest(url);
             ArrayList bookList = UrlUtils.extractFromJson(stringJson);
+            if (bookAsyncTask.isCancelled()) {
+            }
             return bookList;
         }
 
@@ -96,7 +104,27 @@ public class MainActivity extends AppCompatActivity {
         }
         changeFocusHideKeyboard();
         bookListURL = bookListURL1 + title + bookListURL2;
-        BookAsyncTask bookAsyncTask = new BookAsyncTask();
+        bookAsyncTask = new BookAsyncTask();
         bookAsyncTask.execute();
+    }
+
+    //子线程catch之后，发送消息，结束dialog与AsyncTask。
+    public Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                    progressDialog.dismiss();
+                    bookAsyncTask.cancel(true);
+                    break;
+            }
+        }
+    };
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        bookAsyncTask.cancel(true);
     }
 }
