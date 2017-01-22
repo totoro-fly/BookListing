@@ -2,14 +2,12 @@ package com.totoro_fly.booklisting;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -62,26 +60,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             progressDialog.setCancelable(false);
-            progressDialog.setMessage("刷新...");
+            progressDialog.setMessage(getString(R.string.refresh));
             progressDialog.show();
         }
 
         @Override
         protected ArrayList doInBackground(String... urls) {
-            while (true) {
-                if (bookAsyncTask.isCancelled()) {
-                    break;
-                }
-                //传递Handler对象，试子线程使用sendmessage
-                UrlUtils.mHandler = mHandler;
-                URL url = UrlUtils.createUrl(bookListURL);
-                String stringJson = "";
-                stringJson = UrlUtils.makeHTTPRequest(url);
-                ArrayList bookList = UrlUtils.extractFromJson(stringJson);
-                Log.e(TAG, String.valueOf(bookAsyncTask.isCancelled()));
-                return bookList;
-            }
-            return null;
+            //传递Handler对象，试子线程使用sendmessage
+            UrlUtils.mHandler = mHandler;
+            URL url = UrlUtils.createUrl(bookListURL);
+            String stringJson = "";
+            stringJson = UrlUtils.makeHTTPRequest(url);
+            ArrayList bookList = UrlUtils.extractFromJson(stringJson);
+            return bookList;
         }
 
         @Override
@@ -110,16 +101,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
-
     @OnClick(R.id.enter_button)
     public void onClick() {
         String title = String.valueOf(titleEdittext.getText());
         if (title.isEmpty()) {
-            Toast.makeText(this, "请输入书籍信息", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.input_info, Toast.LENGTH_LONG).show();
             changeFocusHideKeyboard();
             return;
         }
@@ -136,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
             switch (msg.what) {
                 case 0:
                     progressDialog.dismiss();
-                    bookAsyncTask.cancel(true);
                     break;
             }
         }
@@ -145,6 +130,5 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-//        bookAsyncTask.cancel(true);
     }
 }

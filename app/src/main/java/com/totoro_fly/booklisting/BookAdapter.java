@@ -68,7 +68,7 @@ public class BookAdapter extends BaseAdapter {
         viewHolder.mName.setText(book.getmName());
         viewHolder.mAuthor.setText(book.getmAuthor());
         String amount = book.getmPrice();
-        if (amount.equals("无"))
+        if (amount.equals(mContext.getString(R.string.noting)))
             viewHolder.mPrice.setText(amount);
         else
             viewHolder.mPrice.setText(NumberFormat.getCurrencyInstance(Locale.US).format(Double.parseDouble(amount)));

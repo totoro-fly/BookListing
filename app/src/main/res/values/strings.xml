@@ -2,5 +2,9 @@
     <string name="app_name">Book Listing</string>
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="noting">无</string>
+    <string name="time_out">连接超时</string>
+    <string name="resume_load">请重新输入，无相关信息</string>
+    <string name="refresh">刷新...</string>
+    <string name="input_info">请输入书籍信息</string>
 </resources>

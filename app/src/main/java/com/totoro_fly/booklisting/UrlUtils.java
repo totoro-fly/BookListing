@@ -53,7 +53,7 @@ public class UrlUtils {
             jsonResponse = readFromStream(inputStream);
         } catch (IOException e) {
             Log.e(TAG, "makeHTTPUrl ", e);
-            toastAndSendOverMessage("连接超时");
+            toastAndSendOverMessage(MyApplication.getContext().getString(R.string.time_out));
             e.printStackTrace();
         } finally {
             if (httpURLConnection != null) {
@@ -108,7 +108,7 @@ public class UrlUtils {
                             author = author + authors.getString(j);
                         }
                     } else {
-                        author = "无";
+                        author = MyApplication.getContext().getString(R.string.noting);
                     }
                     String infoLink = volumeInfo.getString("infoLink");
                     JSONObject saleInfo = item.getJSONObject("saleInfo");
@@ -117,7 +117,7 @@ public class UrlUtils {
                         JSONObject listPrice = saleInfo.getJSONObject("listPrice");
                         amount = listPrice.getString("amount");
                     } else {
-                        amount = "无";
+                        amount = MyApplication.getContext().getString(R.string.noting);
                     }
                     bookList.add(new Book(title, author, amount, infoLink));
                 }
@@ -125,8 +125,8 @@ public class UrlUtils {
         } catch (JSONException e) {
             Log.e(TAG, "extractFromJsonn ", e);
             e.printStackTrace();
-            toastAndSendOverMessage("请重新输入，无相关信息");
-            return null;
+            toastAndSendOverMessage(MyApplication.getContext().getString(R.string.resume_load));
+            System.exit(1);
         }
         return bookList;
     }
