@@ -1,16 +1,23 @@
 package com.totoro_fly.booklisting;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -51,13 +58,6 @@ public class MainActivity extends AppCompatActivity {
         inputMethodManager.hideSoftInputFromWindow(titleEdittext.getWindowToken(), 0);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //旋转屏幕点击按钮,刷新数据。
-        enterButton.performClick();
-    }
-
     private class BookAsyncTask extends AsyncTask<String, Integer, ArrayList<Book>> {
         @Override
         protected void onPreExecute() {
@@ -68,15 +68,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected ArrayList doInBackground(String... urls) {
-            //传递Handler对象，试子线程使用sendmessage
-            UrlUtils.mHandler = mHandler;
-            URL url = UrlUtils.createUrl(bookListURL);
-            String stringJson = "";
-            stringJson = UrlUtils.makeHTTPRequest(url);
-            ArrayList bookList = UrlUtils.extractFromJson(stringJson);
-            if (bookAsyncTask.isCancelled()) {
+            while (true) {
+                if (bookAsyncTask.isCancelled()) {
+                    break;
+                }
+                //传递Handler对象，试子线程使用sendmessage
+                UrlUtils.mHandler = mHandler;
+                URL url = UrlUtils.createUrl(bookListURL);
+                String stringJson = "";
+                stringJson = UrlUtils.makeHTTPRequest(url);
+                ArrayList bookList = UrlUtils.extractFromJson(stringJson);
+                Log.e(TAG, String.valueOf(bookAsyncTask.isCancelled()));
+                return bookList;
             }
-            return bookList;
+            return null;
         }
 
         @Override
@@ -87,19 +92,35 @@ public class MainActivity extends AppCompatActivity {
             updateUI(bookList);
             progressDialog.dismiss();
         }
-
     }
 
-    private void updateUI(ArrayList<Book> bookList) {
-        BookAdapter bookAdapter = new BookAdapter(this, bookList);
+    public void updateUI(ArrayList<Book> bookList) {
+        final BookAdapter bookAdapter = new BookAdapter(this, bookList);
         booklistingListview.setAdapter(bookAdapter);
+        booklistingListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Book book = (Book) bookAdapter.getItem(i);
+                Uri url = Uri.parse(book.getmBuyLink());
+                Intent intent = new Intent(Intent.ACTION_VIEW, url);
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
+    }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
     }
 
     @OnClick(R.id.enter_button)
     public void onClick() {
         String title = String.valueOf(titleEdittext.getText());
         if (title.isEmpty()) {
+            Toast.makeText(this, "请输入书籍信息", Toast.LENGTH_LONG).show();
+            changeFocusHideKeyboard();
             return;
         }
         changeFocusHideKeyboard();
@@ -121,10 +142,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        bookAsyncTask.cancel(true);
+//        bookAsyncTask.cancel(true);
     }
 }

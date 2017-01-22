@@ -126,13 +126,14 @@ public class UrlUtils {
             Log.e(TAG, "extractFromJsonn ", e);
             e.printStackTrace();
             toastAndSendOverMessage("请重新输入，无相关信息");
+            return null;
         }
         return bookList;
     }
 
     private static void toastAndSendOverMessage(String str) {
         Looper.prepare();
-        Toast.makeText(MyApplication.getContext(), str, Toast.LENGTH_SHORT).show();
+        Toast.makeText(MyApplication.getContext(), str, Toast.LENGTH_LONG).show();
         Message message = new Message();
         message.what = 0;
         mHandler.sendMessage(message);
