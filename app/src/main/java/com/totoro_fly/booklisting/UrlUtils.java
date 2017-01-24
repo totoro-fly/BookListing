@@ -1,11 +1,8 @@
 package com.totoro_fly.booklisting;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,7 +23,7 @@ import java.util.ArrayList;
 
 public class UrlUtils {
     private static final String TAG = "UriUtils";
-    public static Handler mHandler;
+//    public static Handler mHandler;
 
     public static URL createUrl(String stringUrl) {
         URL url = null;
@@ -49,11 +46,15 @@ public class UrlUtils {
             httpURLConnection.setReadTimeout(8 * 1000);
             httpURLConnection.setConnectTimeout(10 * 1000);
             httpURLConnection.connect();
-            inputStream = httpURLConnection.getInputStream();
-            jsonResponse = readFromStream(inputStream);
+            if (httpURLConnection.getResponseCode() == 200) {
+                inputStream = httpURLConnection.getInputStream();
+                jsonResponse = readFromStream(inputStream);
+            } else {
+                return null;
+            }
         } catch (IOException e) {
+            EventBus.getDefault().post(new Event(0));
             Log.e(TAG, "makeHTTPUrl ", e);
-            toastAndSendOverMessage(MyApplication.getContext().getString(R.string.time_out));
             e.printStackTrace();
         } finally {
             if (httpURLConnection != null) {
@@ -123,20 +124,10 @@ public class UrlUtils {
                 }
             }
         } catch (JSONException e) {
+            EventBus.getDefault().post(new Event(1));
             Log.e(TAG, "extractFromJsonn ", e);
             e.printStackTrace();
-            toastAndSendOverMessage(MyApplication.getContext().getString(R.string.resume_load));
-            System.exit(1);
         }
         return bookList;
-    }
-
-    private static void toastAndSendOverMessage(String str) {
-        Looper.prepare();
-        Toast.makeText(MyApplication.getContext(), str, Toast.LENGTH_LONG).show();
-        Message message = new Message();
-        message.what = 0;
-        mHandler.sendMessage(message);
-        Looper.loop();
     }
 }

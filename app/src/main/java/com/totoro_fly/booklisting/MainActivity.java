@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -16,6 +14,10 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private String bookListURL = "";
     private ProgressDialog progressDialog;
     BookAsyncTask bookAsyncTask;
+    ArrayList numberEvent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         progressDialog = new ProgressDialog(this);
+        EventBus.getDefault().register(this);
+        numberEvent = new ArrayList();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(Event event) {
+        numberEvent.add(event.getmNumber());
+    }
+
+    public void toastInfo() {
+        switch ((int) numberEvent.get(0)) {
+            case 0:
+                Toast.makeText(this, "连接超时", Toast.LENGTH_LONG).show();
+                break;
+            case 1:
+                Toast.makeText(this, "无相关内容,请重新输入", Toast.LENGTH_LONG).show();
+                break;
+        }
     }
 
     private void changeFocusHideKeyboard() {
@@ -66,8 +87,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected ArrayList doInBackground(String... urls) {
-            //传递Handler对象，试子线程使用sendmessage
-            UrlUtils.mHandler = mHandler;
             URL url = UrlUtils.createUrl(bookListURL);
             String stringJson = "";
             stringJson = UrlUtils.makeHTTPRequest(url);
@@ -82,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
             }
             updateUI(bookList);
             progressDialog.dismiss();
+            if (!numberEvent.isEmpty()) {
+                toastInfo();
+                numberEvent.clear();
+            }
         }
     }
 
@@ -115,20 +138,9 @@ public class MainActivity extends AppCompatActivity {
         bookAsyncTask.execute();
     }
 
-    //子线程catch之后，发送消息，结束dialog与AsyncTask。
-    public Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case 0:
-                    progressDialog.dismiss();
-                    break;
-            }
-        }
-    };
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 }
