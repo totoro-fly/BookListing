@@ -29,8 +29,10 @@
             android:ellipsize="start"
             android:gravity="center"
             android:hint="请输入书籍信息"
+            android:inputType="text"
             android:maxLines="1"
-            android:selectAllOnFocus="true"/>
+            android:selectAllOnFocus="true"
+            />
 
         <Button
             android:id="@+id/enter_button"
@@ -76,13 +78,19 @@
     </LinearLayout>
 
     <ListView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/booklisting_listview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:divider="@null"
         android:dividerHeight="0dp">
     </ListView>
+
+    <TextView
+        android:id="@+id/empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        tools:text="请重新输入"
+        />
 
 </LinearLayout>

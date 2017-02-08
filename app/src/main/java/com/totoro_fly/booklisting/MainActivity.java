@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -13,13 +14,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -37,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.booklisting_listview)
     ListView booklistingListview;
     private static final String TAG = MainActivity.class.getSimpleName();
+    @Bind(R.id.empty_view)
+    TextView emptyView;
     private String bookListURL1 = "https://www.googleapis.com/books/v1/volumes?q=";
     private String bookListURL2 = "&country=us";
     private String bookListURL = "";
@@ -50,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         progressDialog = new ProgressDialog(this);
+        booklistingListview.setEmptyView(emptyView);
         EventBus.getDefault().register(this);
         numberEvent = new ArrayList();
     }
@@ -62,9 +69,11 @@ public class MainActivity extends AppCompatActivity {
     public void toastInfo() {
         switch ((int) numberEvent.get(0)) {
             case 0:
+                emptyView.setText("连接超时");
                 Toast.makeText(this, "连接超时", Toast.LENGTH_LONG).show();
                 break;
             case 1:
+                emptyView.setText("无相关内容,请重新输入");
                 Toast.makeText(this, "无相关内容,请重新输入", Toast.LENGTH_LONG).show();
                 break;
         }
@@ -126,13 +135,22 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.enter_button)
     public void onClick() {
-        String title = String.valueOf(titleEdittext.getText());
+        String title = null;
+        //修正用户在首尾误输入的空格
+        title = String.valueOf(titleEdittext.getText()).trim();
         if (title.isEmpty()) {
             Toast.makeText(this, R.string.input_info, Toast.LENGTH_LONG).show();
             changeFocusHideKeyboard();
             return;
         }
+        Log.d(TAG, title);
+        try {
+            title = URLEncoder.encode(title, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         changeFocusHideKeyboard();
+        Log.d(TAG, title);
         bookListURL = bookListURL1 + title + bookListURL2;
         bookAsyncTask = new BookAsyncTask();
         bookAsyncTask.execute();
